@@ -1,0 +1,138 @@
+"use client";
+
+import React, { useRef, useState } from "react";
+import { Editor } from "@tldraw/tldraw";
+import { X, Youtube, ExternalLink } from "lucide-react";
+import { mediaSink } from "@/lib/mediaSink";
+
+interface FocusModeProps {
+    videoUrl: string;
+    onVideoUrlChange: (url: string) => void;
+    notes: string;
+    onNotesChange: (notes: string) => void;
+    onClose: () => void;
+    editor: Editor | null;
+}
+
+function extractYoutubeId(url: string): string | null {
+    const match = url.match(
+        /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([\w-]{11})/
+    );
+    return match ? match[1] : null;
+}
+
+export default function FocusMode({
+    videoUrl, onVideoUrlChange, notes, onNotesChange, onClose,
+}: FocusModeProps) {
+    const [inputUrl, setInputUrl] = useState(videoUrl);
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const ytId = extractYoutubeId(inputUrl || videoUrl);
+    const isYt = !!ytId;
+    const isLocalVideo = !isYt && (videoUrl.startsWith("blob:") || videoUrl.match(/\.(mp4|webm|ogg)$/i));
+
+    const handleInputSubmit = () => {
+        onVideoUrlChange(inputUrl);
+    };
+
+    return (
+        <div className="focus-overlay">
+            {/* Left: Video pane */}
+            <div className="focus-video-pane">
+                {/* Close button */}
+                <button
+                    onClick={onClose}
+                    style={{
+                        position: "absolute", top: 12, right: 12, zIndex: 10,
+                        background: "rgba(0,0,0,0.6)", border: "1px solid rgba(255,255,255,0.1)",
+                        borderRadius: 20, padding: "6px 12px", color: "white",
+                        cursor: "pointer", fontSize: 12, display: "flex", alignItems: "center", gap: 6
+                    }}
+                >
+                    <X size={14} /> Exit Focus
+                </button>
+
+                {isYt ? (
+                    <iframe
+                        src={`https://www.youtube-nocookie.com/embed/${ytId}?autoplay=0&rel=0`}
+                        allowFullScreen
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        style={{ width: "100%", height: "100%", border: "none" }}
+                    />
+                ) : isLocalVideo ? (
+                    <video
+                        ref={videoRef}
+                        src={videoUrl}
+                        controls
+                        style={{ maxWidth: "100%", maxHeight: "100%" }}
+                        onPlay={() => videoRef.current && mediaSink.acquire(videoRef.current)}
+                        onPause={() => videoRef.current && mediaSink.release(videoRef.current)}
+                    />
+                ) : (
+                    <div style={{ textAlign: "center", color: "#94a3b8", padding: 32 }}>
+                        <Youtube size={56} style={{ marginBottom: 16, opacity: 0.3 }} />
+                        <div style={{ fontSize: 15, marginBottom: 20 }}>
+                            Paste a YouTube URL or local video to watch here
+                        </div>
+                        <div style={{ display: "flex", gap: 8, maxWidth: 400 }}>
+                            <input
+                                value={inputUrl}
+                                onChange={e => setInputUrl(e.target.value)}
+                                placeholder="https://youtube.com/watch?v=…"
+                                style={{
+                                    flex: 1, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)",
+                                    borderRadius: 8, padding: "8px 12px", color: "white", fontSize: 13, outline: "none"
+                                }}
+                                onKeyDown={e => e.key === "Enter" && handleInputSubmit()}
+                            />
+                            <button
+                                onClick={handleInputSubmit}
+                                style={{
+                                    background: "#e94560", border: "none", borderRadius: 8,
+                                    padding: "8px 16px", color: "white", cursor: "pointer", fontSize: 13
+                                }}
+                            >
+                                Load
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Right: Notes pane */}
+            <div className="focus-notes-pane">
+                <div className="focus-notes-header">
+                    <div>
+                        <div style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)" }}>Study Notes</div>
+                        <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>Type your notes while watching</div>
+                    </div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                        {(inputUrl || videoUrl) && isYt && (
+                            <button
+                                onClick={() => window.open(`https://youtube.com/watch?v=${ytId}`, "_blank")}
+                                style={{
+                                    background: "rgba(255,255,255,0.06)", border: "1px solid var(--border)",
+                                    borderRadius: 8, padding: "6px 12px", color: "var(--text-secondary)",
+                                    cursor: "pointer", fontSize: 12, display: "flex", alignItems: "center", gap: 6
+                                }}
+                            >
+                                <ExternalLink size={13} /> Open in Browser
+                            </button>
+                        )}
+                    </div>
+                </div>
+
+                <textarea
+                    className="focus-notes-area"
+                    value={notes}
+                    onChange={e => onNotesChange(e.target.value)}
+                    placeholder={`📝 Start typing your notes here…\n\nTip: Use timestamps like [2:45] to mark key moments in the lecture.`}
+                />
+
+                <div style={{ marginTop: 12, display: "flex", justifyContent: "space-between", fontSize: 12, color: "var(--text-secondary)" }}>
+                    <span>{notes.split(/\s+/).filter(Boolean).length} words</span>
+                    <span>{notes.length} characters</span>
+                </div>
+            </div>
+        </div>
+    );
+}

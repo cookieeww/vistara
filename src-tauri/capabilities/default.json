@@ -1,0 +1,24 @@
+{
+    "$schema": "https://schema.tauri.app/config/2",
+    "identifier": "default",
+    "windows": [
+        "main"
+    ],
+    "permissions": [
+        "core:default",
+        "core:window:allow-set-title",
+        "fs:default",
+        "fs:allow-read-file",
+        "fs:allow-write-file",
+        "fs:allow-copy-file",
+        "fs:allow-mkdir",
+        "fs:allow-read-dir",
+        "fs:allow-exists",
+        "fs:allow-remove-file",
+        "dialog:default",
+        "dialog:allow-open",
+        "dialog:allow-save",
+        "shell:default",
+        "shell:allow-open"
+    ]
+}
