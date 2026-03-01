@@ -40,7 +40,7 @@ async function getTauriModules() {
 // ── Helpers ────────────────────────────────────────────────────────────────
 function extractYoutubeId(url: string): string | null {
     const match = url.match(
-        /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/))([\\w-]{11})/
+        /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/))([\w-]{11})/
     );
     return match ? match[1] : null;
 }
@@ -49,6 +49,14 @@ function isMobileDevice(): boolean {
     if (typeof window === "undefined") return false;
     return window.innerWidth <= 768;
 }
+
+// ── tldraw component overrides (MUST be module-level for stable reference) ──
+const tldrawComponents: TLComponents = {
+    Toolbar: null,
+    MainMenu: null,
+    PageMenu: null,
+    NavigationPanel: null,
+};
 
 // ── PDF state ──────────────────────────────────────────────────────────────
 interface PdfFile {
@@ -417,15 +425,8 @@ export default function CanvasWrapper() {
         });
     }, []);
 
-    // ── tldraw component overrides ────────────────────────────────────────
-    // Re-enable native tldraw UI: style panel, context menu, keyboard shortcuts
-    // Only hide tldraw's built-in toolbar and main menu (we use our own)
-    const components: TLComponents = {
-        Toolbar: null,
-        MainMenu: null,
-        PageMenu: null,
-        NavigationPanel: null,
-    };
+    // tldraw component overrides are defined at module level (tldrawComponents)
+    // to prevent remounting on every render
 
     return (
         <div
@@ -479,7 +480,7 @@ export default function CanvasWrapper() {
                             );
                         }}
                         autoFocus
-                        components={components}
+                        components={tldrawComponents}
                     />
                 </div>
 

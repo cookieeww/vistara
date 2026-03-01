@@ -16,7 +16,7 @@ interface FocusModeProps {
 
 function extractYoutubeId(url: string): string | null {
     const match = url.match(
-        /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/))([\\w-]{11})/
+        /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/))([\w-]{11})/
     );
     return match ? match[1] : null;
 }
@@ -102,7 +102,7 @@ export default function FocusMode({
                         onPause={() => videoRef.current && mediaSink.release(videoRef.current)}
                     />
                 ) : (
-                    <div style={{ textAlign: "center", color: "#94a3b8", padding: 32 }}>
+                    <div style={{ textAlign: "center", color: "var(--text-secondary)", padding: 32 }}>
                         <Youtube size={56} style={{ marginBottom: 16, opacity: 0.3 }} />
                         <div style={{ fontSize: 15, marginBottom: 20 }}>
                             Paste a YouTube URL or local video to watch here
@@ -113,8 +113,8 @@ export default function FocusMode({
                                 onChange={e => setInputUrl(e.target.value)}
                                 placeholder="https://youtube.com/watch?v=…"
                                 style={{
-                                    flex: 1, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)",
-                                    borderRadius: 8, padding: "8px 12px", color: "white", fontSize: 13, outline: "none"
+                                    flex: 1, background: "var(--bg-tertiary)", border: "1px solid var(--border-strong)",
+                                    borderRadius: 8, padding: "8px 12px", color: "var(--text-primary)", fontSize: 13, outline: "none"
                                 }}
                                 onKeyDown={e => e.key === "Enter" && handleInputSubmit()}
                             />

@@ -11,40 +11,42 @@
   --toolbar-height: 48px;
   --sidebar-width: 300px;
 
-  --bg-primary: #0d1117;
-  --bg-secondary: #161b22;
-  --bg-tertiary: #21262d;
-  --bg-card: #1c2128;
-  --bg-overlay: rgba(0, 0, 0, 0.5);
+  --bg-primary: #0a0e14;
+  --bg-secondary: #11161e;
+  --bg-tertiary: #1a1f2b;
+  --bg-card: #141922;
+  --bg-overlay: rgba(0, 0, 0, 0.65);
 
-  --accent: #58a6ff;
-  --accent-hover: #79b8ff;
-  --accent-subtle: rgba(88, 166, 255, 0.15);
-  --accent-muted: rgba(88, 166, 255, 0.08);
+  --accent: #6cb4ff;
+  --accent-hover: #8fc8ff;
+  --accent-subtle: rgba(108, 180, 255, 0.18);
+  --accent-muted: rgba(108, 180, 255, 0.08);
+  --accent-glow: 0 0 12px rgba(108, 180, 255, 0.25);
 
-  --danger: #f85149;
-  --danger-subtle: rgba(248, 81, 73, 0.15);
-  --success: #3fb950;
-  --warning: #d29922;
+  --danger: #ff6b6b;
+  --danger-subtle: rgba(255, 107, 107, 0.15);
+  --success: #51cf66;
+  --warning: #fcc419;
 
-  --text-primary: #e6edf3;
-  --text-secondary: #8b949e;
-  --text-muted: #6e7681;
+  --text-primary: #e8edf4;
+  --text-secondary: #8b96a5;
+  --text-muted: #5a6370;
 
-  --border: rgba(240, 246, 252, 0.1);
-  --border-strong: rgba(240, 246, 252, 0.2);
+  --border: rgba(240, 246, 252, 0.08);
+  --border-strong: rgba(240, 246, 252, 0.16);
 
-  --glass: rgba(13, 17, 23, 0.85);
-  --glass-heavy: rgba(13, 17, 23, 0.95);
+  --glass: rgba(10, 14, 20, 0.88);
+  --glass-heavy: rgba(10, 14, 20, 0.96);
 
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
-  --shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.6);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 8px 28px rgba(0, 0, 0, 0.55);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.65);
 
-  --canvas-bg: #0d1117;
+  --canvas-bg: #0a0e14;
   --radius: 6px;
   --radius-lg: 10px;
+  --toolbar-bg: linear-gradient(180deg, rgba(17, 22, 30, 0.98) 0%, rgba(10, 14, 20, 0.98) 100%);
 }
 
 /* ── Light Theme ── */
@@ -90,8 +92,12 @@ body,
 .toolbar,
 .sidebar,
 .status-bar,
-.pages-bar {
-  transition: background-color 0.25s ease, color 0.2s ease, border-color 0.2s ease;
+.pages-bar,
+.toolbar-btn,
+.sidebar-tab,
+.todo-input,
+.quick-notes-area {
+  transition: background-color 0.3s ease, color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -136,10 +142,15 @@ body {
 ::-webkit-scrollbar-thumb {
   background: var(--text-muted);
   border-radius: 3px;
+  border: 1px solid transparent;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-secondary);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -147,9 +158,9 @@ body {
    ══════════════════════════════════════════════════════════════════════════ */
 .toolbar {
   height: var(--toolbar-height);
-  background: var(--glass-heavy);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: var(--toolbar-bg, var(--glass-heavy));
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
@@ -194,6 +205,7 @@ body {
 .toolbar-btn.active {
   background: var(--accent-subtle);
   color: var(--accent);
+  box-shadow: var(--accent-glow, none);
 }
 
 .toolbar-btn:disabled {
@@ -329,14 +341,44 @@ body {
   background: var(--canvas-bg) !important;
 }
 
+/* ── tldraw dark mode integration ── */
+[data-theme="dark"] .tl-container {
+  --color-background: var(--canvas-bg);
+  --color-text: var(--text-primary);
+}
+
+[data-theme="dark"] .tlui-style-panel__wrapper,
+[data-theme="dark"] .tlui-menu,
+[data-theme="dark"] .tlui-popover {
+  background: var(--glass-heavy) !important;
+  backdrop-filter: blur(20px) saturate(1.4) !important;
+  border-color: var(--border-strong) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+[data-theme="dark"] .tlui-button:hover {
+  background: var(--accent-muted) !important;
+}
+
+[data-theme="dark"] .tlui-button[data-state="selected"],
+[data-theme="dark"] .tlui-button[aria-pressed="true"] {
+  background: var(--accent-subtle) !important;
+  color: var(--accent) !important;
+}
+
+/* ── tldraw grid dots in dark mode ── */
+[data-theme="dark"] .tl-grid {
+  opacity: 0.3;
+}
+
 /* ══════════════════════════════════════════════════════════════════════════
    SIDEBAR
    ══════════════════════════════════════════════════════════════════════════ */
 .sidebar {
   width: var(--sidebar-width);
   background: var(--glass-heavy);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(20px) saturate(1.3);
+  -webkit-backdrop-filter: blur(20px) saturate(1.3);
   border-left: 1px solid var(--border);
   display: flex;
   flex-direction: column;
@@ -388,6 +430,7 @@ body {
 .sidebar-tab.active {
   color: var(--accent);
   border-bottom-color: var(--accent);
+  text-shadow: 0 0 8px rgba(108, 180, 255, 0.3);
 }
 
 .sidebar-panel {
@@ -429,6 +472,7 @@ body {
 
 .todo-input:focus {
   border-color: var(--accent);
+  box-shadow: var(--accent-glow, none);
 }
 
 .todo-add-btn {
@@ -519,6 +563,7 @@ body {
 
 .quick-notes-area:focus {
   border-color: var(--accent);
+  box-shadow: var(--accent-glow, none);
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
