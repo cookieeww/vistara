@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState, memo } from "react";
 import {
     Tldraw,
     Editor,
@@ -65,9 +65,32 @@ interface PdfFile {
     url: string;
 }
 
+// ══════════════════════════════════════════════════════════════════════════
+// ISOLATED TLDRAW CANVAS — React.memo prevents remounting on parent re-renders
+// This is the KEY fix for drawings disappearing.
+// ══════════════════════════════════════════════════════════════════════════
+const IsolatedCanvas = memo(function IsolatedCanvas({
+    theme,
+    onMount,
+}: {
+    theme: "dark" | "light";
+    onMount: (editor: Editor) => void;
+}) {
+    return (
+        <div style={{ position: "absolute", inset: 0 }}>
+            <Tldraw
+                onMount={onMount}
+                autoFocus
+                components={tldrawComponents}
+            />
+        </div>
+    );
+});
+
 // ── Component ──────────────────────────────────────────────────────────────
 export default function CanvasWrapper() {
     const editorRef = useRef<Editor | null>(null);
+    const isDirtyRef = useRef(false); // Use ref to avoid re-renders
     const [sidebarOpen, setSidebarOpen] = useState(() => !isMobileDevice());
     const [activeTool, setActiveTool] = useState("select");
     const [focusMode, setFocusMode] = useState(false);
@@ -75,13 +98,14 @@ export default function CanvasWrapper() {
     const [todos, setTodos] = useState<TodoItem[]>([]);
     const [notes, setNotes] = useState("");
     const [currentFilePath, setCurrentFilePath] = useState<string | null>(null);
-    const [isDirty, setIsDirty] = useState(false);
+    const [isDirtyDisplay, setIsDirtyDisplay] = useState(false); // Only for UI display
     const [statusMsg, setStatusMsg] = useState("Ready — draw something!");
     const [assetMap, setAssetMap] = useState<Record<string, string>>({});
     const [theme, setTheme] = useState<"dark" | "light">("dark");
     const [pdfFiles, setPdfFiles] = useState<PdfFile[]>([]);
     const [dragOver, setDragOver] = useState(false);
     const autosaveTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+    const dirtyDisplayTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // ── Theme management ──────────────────────────────────────────────────
     useEffect(() => {
@@ -106,6 +130,27 @@ export default function CanvasWrapper() {
         window.addEventListener("resize", handleResize);
         return () => window.removeEventListener("resize", handleResize);
     }, [sidebarOpen]);
+
+    // ── Tldraw onMount handler (stable callback) ──────────────────────────
+    const handleEditorMount = useCallback((editor: Editor) => {
+        editorRef.current = editor;
+        editor.user.updateUserPreferences({ colorScheme: "dark" });
+
+        // Listen for store changes using REF, NOT state — this prevents re-renders
+        editor.store.listen(
+            () => {
+                if (!isDirtyRef.current) {
+                    isDirtyRef.current = true;
+                    // Debounce the display update so we don't trigger constant re-renders
+                    if (dirtyDisplayTimer.current) clearTimeout(dirtyDisplayTimer.current);
+                    dirtyDisplayTimer.current = setTimeout(() => {
+                        setIsDirtyDisplay(true);
+                    }, 500);
+                }
+            },
+            { source: "user", scope: "document" }
+        );
+    }, []);
 
     // ── Save helpers ──────────────────────────────────────────────────────
     const buildVistaraFile = useCallback((): VistaraFile | null => {
@@ -133,7 +178,8 @@ export default function CanvasWrapper() {
                     a.click();
                     URL.revokeObjectURL(url);
                 }
-                setIsDirty(false);
+                isDirtyRef.current = false;
+                setIsDirtyDisplay(false);
                 setStatusMsg("Saved ✓");
                 setTimeout(() => setStatusMsg("Ready"), 2500);
             } catch (e) {
@@ -155,7 +201,8 @@ export default function CanvasWrapper() {
         setAssetMap({});
         setPdfFiles([]);
         setCurrentFilePath(null);
-        setIsDirty(false);
+        isDirtyRef.current = false;
+        setIsDirtyDisplay(false);
         setStatusMsg("New board created");
     }, []);
 
@@ -178,7 +225,8 @@ export default function CanvasWrapper() {
                 setNotes(vf.notes || "");
                 setAssetMap(vf.assets || {});
                 setCurrentFilePath(selected);
-                setIsDirty(false);
+                isDirtyRef.current = false;
+                setIsDirtyDisplay(false);
                 setStatusMsg("Board loaded ✓");
             } else {
                 const input = document.createElement("input");
@@ -198,7 +246,8 @@ export default function CanvasWrapper() {
                             setTodos(vf.todos || []);
                             setNotes(vf.notes || "");
                             setAssetMap(vf.assets || {});
-                            setIsDirty(false);
+                            isDirtyRef.current = false;
+                            setIsDirtyDisplay(false);
                             setStatusMsg("Board loaded ✓");
                         } catch {
                             setStatusMsg("Failed to parse .vistara file");
@@ -291,7 +340,6 @@ export default function CanvasWrapper() {
                     } as any);
                     setAssetMap((prev) => ({ ...prev, [file.name]: url }));
                 } else if (file.type === "application/pdf") {
-                    // Spawn PDF viewer overlay
                     const url = URL.createObjectURL(file);
                     setPdfFiles((prev) => [
                         ...prev,
@@ -320,7 +368,8 @@ export default function CanvasWrapper() {
                     } as any);
                 }
             }
-            setIsDirty(true);
+            isDirtyRef.current = true;
+            setIsDirtyDisplay(true);
         },
         []
     );
@@ -344,7 +393,8 @@ export default function CanvasWrapper() {
                     h: 225,
                 },
             } as any);
-            setIsDirty(true);
+            isDirtyRef.current = true;
+            setIsDirtyDisplay(true);
         }
     }, []);
 
@@ -368,14 +418,14 @@ export default function CanvasWrapper() {
     // ── Autosave every 30s ────────────────────────────────────────────────
     useEffect(() => {
         autosaveTimer.current = setInterval(() => {
-            if (isDirty && currentFilePath) {
+            if (isDirtyRef.current && currentFilePath) {
                 saveToPath(currentFilePath);
             }
         }, 30000);
         return () => {
             if (autosaveTimer.current) clearInterval(autosaveTimer.current);
         };
-    }, [isDirty, currentFilePath, saveToPath]);
+    }, [currentFilePath, saveToPath]);
 
     // ── Export ────────────────────────────────────────────────────────────
     const handleExport = useCallback(
@@ -425,9 +475,6 @@ export default function CanvasWrapper() {
         });
     }, []);
 
-    // tldraw component overrides are defined at module level (tldrawComponents)
-    // to prevent remounting on every render
-
     return (
         <div
             style={{
@@ -451,18 +498,18 @@ export default function CanvasWrapper() {
                 onToggleSidebar={() => setSidebarOpen((v) => !v)}
                 onToggleFocusMode={() => setFocusMode((v) => !v)}
                 isSidebarOpen={sidebarOpen}
-                isDirty={isDirty}
+                isDirty={isDirtyDisplay}
                 editor={editorRef.current}
                 theme={theme}
                 onToggleTheme={toggleTheme}
             />
 
             {/* ── Canvas + Sidebar ── */}
-            <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
-                {/* Canvas drop zone */}
+            <div style={{ flex: 1, display: "flex", overflow: "hidden", position: "relative" }}>
+                {/* Canvas drop zone — position:relative ensures absolute children have bounds */}
                 <div
                     className={`canvas-drop-zone ${dragOver ? "drag-over" : ""}`}
-                    style={{ flex: 1, position: "relative", overflow: "hidden" }}
+                    style={{ flex: 1, position: "relative", minHeight: 0 }}
                     onDragOver={(e) => {
                         e.preventDefault();
                         setDragOver(true);
@@ -470,17 +517,10 @@ export default function CanvasWrapper() {
                     onDragLeave={() => setDragOver(false)}
                     onDrop={handleFileDrop}
                 >
-                    <Tldraw
-                        onMount={(editor) => {
-                            editorRef.current = editor;
-                            editor.user.updateUserPreferences({ colorScheme: theme });
-                            editor.store.listen(
-                                () => setIsDirty(true),
-                                { source: "user", scope: "document" }
-                            );
-                        }}
-                        autoFocus
-                        components={tldrawComponents}
+                    {/* ISOLATED CANVAS — position:absolute ensures tldraw always has explicit dimensions */}
+                    <IsolatedCanvas
+                        theme={theme}
+                        onMount={handleEditorMount}
                     />
                 </div>
 
@@ -511,7 +551,7 @@ export default function CanvasWrapper() {
             <StatusBar
                 message={statusMsg}
                 filePath={currentFilePath}
-                isDirty={isDirty}
+                isDirty={isDirtyDisplay}
             />
 
             {/* ── Focus / Study Mode Overlay ── */}

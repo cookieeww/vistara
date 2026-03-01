@@ -29,24 +29,24 @@ interface ToolbarProps {
 }
 
 const drawTools = [
-    { id: "select", icon: <MousePointer2 size={15} />, title: "Select (V)" },
-    { id: "hand", icon: <span style={{ fontSize: 14 }}>✋</span>, title: "Pan (H)" },
-    { id: "draw", icon: <Pencil size={15} />, title: "Draw (D)" },
-    { id: "highlight", icon: <Highlighter size={15} />, title: "Highlighter" },
-    { id: "eraser", icon: <Eraser size={15} />, title: "Eraser (E)" },
-    { id: "laser", icon: <Pointer size={15} />, title: "Laser Pointer" },
+    { id: "select", icon: <MousePointer2 size={16} />, title: "Select (V)" },
+    { id: "hand", icon: <span style={{ fontSize: 15 }}>✋</span>, title: "Pan (H)" },
+    { id: "draw", icon: <Pencil size={16} />, title: "Draw (D)" },
+    { id: "highlight", icon: <Highlighter size={16} />, title: "Highlighter" },
+    { id: "eraser", icon: <Eraser size={16} />, title: "Eraser (E)" },
+    { id: "laser", icon: <Pointer size={16} />, title: "Laser Pointer" },
 ];
 
 const textTools = [
-    { id: "text", icon: <Type size={15} />, title: "Text (T)" },
-    { id: "note", icon: <StickyNote size={15} />, title: "Sticky Note (N)" },
+    { id: "text", icon: <Type size={16} />, title: "Text (T)" },
+    { id: "note", icon: <StickyNote size={16} />, title: "Sticky Note (N)" },
 ];
 
 const shapeTools = [
-    { id: "geo", icon: <Square size={15} />, title: "Shapes (R)" },
-    { id: "line", icon: <Minus size={15} />, title: "Line (L)" },
-    { id: "arrow", icon: <MoveRight size={15} />, title: "Arrow (A)" },
-    { id: "frame", icon: <Frame size={15} />, title: "Frame (F)" },
+    { id: "geo", icon: <Square size={16} />, title: "Shapes (R)" },
+    { id: "line", icon: <Minus size={16} />, title: "Line (L)" },
+    { id: "arrow", icon: <MoveRight size={16} />, title: "Arrow (A)" },
+    { id: "frame", icon: <Frame size={16} />, title: "Frame (F)" },
 ];
 
 export default function Toolbar({
@@ -98,13 +98,11 @@ export default function Toolbar({
         <div className="toolbar">
             {/* Logo */}
             <span className="toolbar-logo">Vistara</span>
-            <div className="toolbar-separator" />
 
             {/* File menu */}
             <div style={{ position: "relative" }} ref={fileRef}>
                 <button className="toolbar-btn" onClick={() => setShowFile(!showFile)}>
-                    <FolderOpen size={14} />
-                    <span className="label">File</span>
+                    <FolderOpen size={15} />
                     <ChevronDown size={10} />
                 </button>
                 {showFile && (
@@ -125,39 +123,33 @@ export default function Toolbar({
 
             <div className="toolbar-separator" />
 
-            {/* Drawing tools */}
+            {/* Drawing tools group */}
             <div className="toolbar-group">
                 {drawTools.map(t => <ToolButton key={t.id} {...t} />)}
             </div>
 
             <div className="toolbar-separator" />
 
-            {/* Text tools */}
+            {/* Text tools group */}
             <div className="toolbar-group">
                 {textTools.map(t => <ToolButton key={t.id} {...t} />)}
             </div>
 
             <div className="toolbar-separator" />
 
-            {/* Shape tools */}
+            {/* Shape tools group */}
             <div className="toolbar-group">
                 {shapeTools.map(s => <ToolButton key={s.id} {...s} />)}
             </div>
 
             <div className="toolbar-separator" />
 
-            {/* Undo / Redo */}
+            {/* Undo / Redo / Zoom */}
             <div className="toolbar-group">
-                <button className="toolbar-btn" title="Undo (Ctrl+Z)" onClick={undo}><Undo2 size={14} /></button>
-                <button className="toolbar-btn" title="Redo (Ctrl+Y)" onClick={redo}><Redo2 size={14} /></button>
-            </div>
-
-            <div className="toolbar-separator" />
-
-            {/* Zoom */}
-            <div className="toolbar-group">
-                <button className="toolbar-btn" title="Zoom Out" onClick={zoomOut}><ZoomOut size={14} /></button>
-                <button className="toolbar-btn" title="Zoom In" onClick={zoomIn}><ZoomIn size={14} /></button>
+                <button className="toolbar-btn" title="Undo (Ctrl+Z)" onClick={undo}><Undo2 size={15} /></button>
+                <button className="toolbar-btn" title="Redo (Ctrl+Y)" onClick={redo}><Redo2 size={15} /></button>
+                <button className="toolbar-btn" title="Zoom Out" onClick={zoomOut}><ZoomOut size={15} /></button>
+                <button className="toolbar-btn" title="Zoom In" onClick={zoomIn}><ZoomIn size={15} /></button>
             </div>
 
             <div className="toolbar-separator" />
@@ -165,9 +157,9 @@ export default function Toolbar({
             {/* Page + Clear */}
             <div className="toolbar-group">
                 <button className="toolbar-btn" title="Add Page" onClick={() => editor?.createPage({ name: `Page ${(editor.getPages().length + 1)}` })}>
-                    <Plus size={14} />
+                    <Plus size={15} />
                 </button>
-                <button className="toolbar-btn" title="Clear Board" onClick={clearBoard}><Trash2 size={14} /></button>
+                <button className="toolbar-btn" title="Clear Board" onClick={clearBoard}><Trash2 size={15} /></button>
             </div>
 
             <div style={{ flex: 1 }} />
@@ -176,12 +168,12 @@ export default function Toolbar({
             <div className="toolbar-group">
                 {/* Theme toggle */}
                 <button className="toolbar-btn" title={`Switch to ${theme === "dark" ? "Light" : "Dark"} Mode`} onClick={onToggleTheme}>
-                    {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
+                    {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
                 </button>
 
                 {/* Focus Mode */}
                 <button className="toolbar-btn" title="Study / Focus Mode" onClick={onToggleFocusMode}>
-                    <Eye size={14} />
+                    <Eye size={15} />
                 </button>
 
                 {/* Save */}
@@ -190,13 +182,13 @@ export default function Toolbar({
                     title="Save (Ctrl+S)"
                     onClick={onSave}
                 >
-                    <Save size={14} />
+                    <Save size={15} />
                 </button>
 
                 {/* Export */}
                 <div style={{ position: "relative" }} ref={exportRef}>
                     <button className="toolbar-btn" onClick={() => setShowExport(!showExport)}>
-                        <Download size={14} />
+                        <Download size={15} />
                         <ChevronDown size={10} />
                     </button>
                     {showExport && (
@@ -217,7 +209,7 @@ export default function Toolbar({
                     title="Toggle Sidebar"
                     onClick={onToggleSidebar}
                 >
-                    <PanelRight size={14} />
+                    <PanelRight size={15} />
                 </button>
             </div>
         </div>

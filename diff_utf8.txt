@@ -1,0 +1,303 @@
+﻿diff --git a/app/globals.css b/app/globals.css
+index 868a4bf..9cec383 100644
+--- a/app/globals.css
++++ b/app/globals.css
+@@ -11,40 +11,42 @@
+   --toolbar-height: 48px;
+   --sidebar-width: 300px;
+ 
+-  --bg-primary: #0d1117;
+-  --bg-secondary: #161b22;
+-  --bg-tertiary: #21262d;
+-  --bg-card: #1c2128;
+-  --bg-overlay: rgba(0, 0, 0, 0.5);
+-
+-  --accent: #58a6ff;
+-  --accent-hover: #79b8ff;
+-  --accent-subtle: rgba(88, 166, 255, 0.15);
+-  --accent-muted: rgba(88, 166, 255, 0.08);
+-
+-  --danger: #f85149;
+-  --danger-subtle: rgba(248, 81, 73, 0.15);
+-  --success: #3fb950;
+-  --warning: #d29922;
+-
+-  --text-primary: #e6edf3;
+-  --text-secondary: #8b949e;
+-  --text-muted: #6e7681;
+-
+-  --border: rgba(240, 246, 252, 0.1);
+-  --border-strong: rgba(240, 246, 252, 0.2);
+-
+-  --glass: rgba(13, 17, 23, 0.85);
+-  --glass-heavy: rgba(13, 17, 23, 0.95);
+-
+-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+-  --shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.6);
+-
+-  --canvas-bg: #0d1117;
++  --bg-primary: #0a0e14;
++  --bg-secondary: #11161e;
++  --bg-tertiary: #1a1f2b;
++  --bg-card: #141922;
++  --bg-overlay: rgba(0, 0, 0, 0.65);
++
++  --accent: #6cb4ff;
++  --accent-hover: #8fc8ff;
++  --accent-subtle: rgba(108, 180, 255, 0.18);
++  --accent-muted: rgba(108, 180, 255, 0.08);
++  --accent-glow: 0 0 12px rgba(108, 180, 255, 0.25);
++
++  --danger: #ff6b6b;
++  --danger-subtle: rgba(255, 107, 107, 0.15);
++  --success: #51cf66;
++  --warning: #fcc419;
++
++  --text-primary: #e8edf4;
++  --text-secondary: #8b96a5;
++  --text-muted: #5a6370;
++
++  --border: rgba(240, 246, 252, 0.08);
++  --border-strong: rgba(240, 246, 252, 0.16);
++
++  --glass: rgba(10, 14, 20, 0.88);
++  --glass-heavy: rgba(10, 14, 20, 0.96);
++
++  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
++  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.5);
++  --shadow-lg: 0 8px 28px rgba(0, 0, 0, 0.55);
++  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.65);
++
++  --canvas-bg: #0a0e14;
+   --radius: 6px;
+   --radius-lg: 10px;
++  --toolbar-bg: linear-gradient(180deg, rgba(17, 22, 30, 0.98) 0%, rgba(10, 14, 20, 0.98) 100%);
+ }
+ 
+ /* ΓöÇΓöÇ Light Theme ΓöÇΓöÇ */
+@@ -90,8 +92,12 @@ body,
+ .toolbar,
+ .sidebar,
+ .status-bar,
+-.pages-bar {
+-  transition: background-color 0.25s ease, color 0.2s ease, border-color 0.2s ease;
++.pages-bar,
++.toolbar-btn,
++.sidebar-tab,
++.todo-input,
++.quick-notes-area {
++  transition: background-color 0.3s ease, color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+ }
+ 
+ /* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+@@ -136,20 +142,25 @@ body {
+ ::-webkit-scrollbar-thumb {
+   background: var(--text-muted);
+   border-radius: 3px;
++  border: 1px solid transparent;
+ }
+ 
+ ::-webkit-scrollbar-thumb:hover {
+   background: var(--text-secondary);
+ }
+ 
++[data-theme="dark"] ::-webkit-scrollbar-track {
++  background: rgba(255, 255, 255, 0.02);
++}
++
+ /* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+    TOOLBAR
+    ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */
+ .toolbar {
+   height: var(--toolbar-height);
+-  background: var(--glass-heavy);
+-  backdrop-filter: blur(16px);
+-  -webkit-backdrop-filter: blur(16px);
++  background: var(--toolbar-bg, var(--glass-heavy));
++  backdrop-filter: blur(20px) saturate(1.4);
++  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+   border-bottom: 1px solid var(--border);
+   display: flex;
+   align-items: center;
+@@ -194,6 +205,7 @@ body {
+ .toolbar-btn.active {
+   background: var(--accent-subtle);
+   color: var(--accent);
++  box-shadow: var(--accent-glow, none);
+ }
+ 
+ .toolbar-btn:disabled {
+@@ -329,14 +341,44 @@ body {
+   background: var(--canvas-bg) !important;
+ }
+ 
++/* ΓöÇΓöÇ tldraw dark mode integration ΓöÇΓöÇ */
++[data-theme="dark"] .tl-container {
++  --color-background: var(--canvas-bg);
++  --color-text: var(--text-primary);
++}
++
++[data-theme="dark"] .tlui-style-panel__wrapper,
++[data-theme="dark"] .tlui-menu,
++[data-theme="dark"] .tlui-popover {
++  background: var(--glass-heavy) !important;
++  backdrop-filter: blur(20px) saturate(1.4) !important;
++  border-color: var(--border-strong) !important;
++  box-shadow: var(--shadow-lg) !important;
++}
++
++[data-theme="dark"] .tlui-button:hover {
++  background: var(--accent-muted) !important;
++}
++
++[data-theme="dark"] .tlui-button[data-state="selected"],
++[data-theme="dark"] .tlui-button[aria-pressed="true"] {
++  background: var(--accent-subtle) !important;
++  color: var(--accent) !important;
++}
++
++/* ΓöÇΓöÇ tldraw grid dots in dark mode ΓöÇΓöÇ */
++[data-theme="dark"] .tl-grid {
++  opacity: 0.3;
++}
++
+ /* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+    SIDEBAR
+    ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */
+ .sidebar {
+   width: var(--sidebar-width);
+   background: var(--glass-heavy);
+-  backdrop-filter: blur(16px);
+-  -webkit-backdrop-filter: blur(16px);
++  backdrop-filter: blur(20px) saturate(1.3);
++  -webkit-backdrop-filter: blur(20px) saturate(1.3);
+   border-left: 1px solid var(--border);
+   display: flex;
+   flex-direction: column;
+@@ -388,6 +430,7 @@ body {
+ .sidebar-tab.active {
+   color: var(--accent);
+   border-bottom-color: var(--accent);
++  text-shadow: 0 0 8px rgba(108, 180, 255, 0.3);
+ }
+ 
+ .sidebar-panel {
+@@ -429,6 +472,7 @@ body {
+ 
+ .todo-input:focus {
+   border-color: var(--accent);
++  box-shadow: var(--accent-glow, none);
+ }
+ 
+ .todo-add-btn {
+@@ -519,6 +563,7 @@ body {
+ 
+ .quick-notes-area:focus {
+   border-color: var(--accent);
++  box-shadow: var(--accent-glow, none);
+ }
+ 
+ /* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+diff --git a/app/page.tsx b/app/page.tsx
+index e9df784..9897fa9 100644
+--- a/app/page.tsx
++++ b/app/page.tsx
+@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
+ const CanvasWrapper = dynamic(() => import("@/components/CanvasWrapper"), {
+   ssr: false,
+   loading: () => (
+-    <div className="vistara-root" style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "#1a1a2e" }}>
++    <div className="vistara-root" style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "#0a0e14" }}>
+       <div style={{ textAlign: "center" }}>
+         <div style={{ fontSize: 32, fontWeight: 700, background: "linear-gradient(135deg, #e94560, #9b59b6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", marginBottom: 12 }}>
+           Vistara
+diff --git a/components/CanvasWrapper.tsx b/components/CanvasWrapper.tsx
+index 87a2b53..5aca629 100644
+--- a/components/CanvasWrapper.tsx
++++ b/components/CanvasWrapper.tsx
+@@ -40,7 +40,7 @@ async function getTauriModules() {
+ // ΓöÇΓöÇ Helpers ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+ function extractYoutubeId(url: string): string | null {
+     const match = url.match(
+-        /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/))([\\w-]{11})/
++        /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/))([\w-]{11})/
+     );
+     return match ? match[1] : null;
+ }
+@@ -50,6 +50,14 @@ function isMobileDevice(): boolean {
+     return window.innerWidth <= 768;
+ }
+ 
++// ΓöÇΓöÇ tldraw component overrides (MUST be module-level for stable reference) ΓöÇΓöÇ
++const tldrawComponents: TLComponents = {
++    Toolbar: null,
++    MainMenu: null,
++    PageMenu: null,
++    NavigationPanel: null,
++};
++
+ // ΓöÇΓöÇ PDF state ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+ interface PdfFile {
+     id: string;
+@@ -417,15 +425,8 @@ export default function CanvasWrapper() {
+         });
+     }, []);
+ 
+-    // ΓöÇΓöÇ tldraw component overrides ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+-    // Re-enable native tldraw UI: style panel, context menu, keyboard shortcuts
+-    // Only hide tldraw's built-in toolbar and main menu (we use our own)
+-    const components: TLComponents = {
+-        Toolbar: null,
+-        MainMenu: null,
+-        PageMenu: null,
+-        NavigationPanel: null,
+-    };
++    // tldraw component overrides are defined at module level (tldrawComponents)
++    // to prevent remounting on every render
+ 
+     return (
+         <div
+@@ -479,7 +480,7 @@ export default function CanvasWrapper() {
+                             );
+                         }}
+                         autoFocus
+-                        components={components}
++                        components={tldrawComponents}
+                     />
+                 </div>
+ 
+diff --git a/components/FocusMode.tsx b/components/FocusMode.tsx
+index 6a7c4d4..23ed00f 100644
+--- a/components/FocusMode.tsx
++++ b/components/FocusMode.tsx
+@@ -16,7 +16,7 @@ interface FocusModeProps {
+ 
+ function extractYoutubeId(url: string): string | null {
+     const match = url.match(
+-        /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/))([\\w-]{11})/
++        /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/))([\w-]{11})/
+     );
+     return match ? match[1] : null;
+ }
+@@ -102,7 +102,7 @@ export default function FocusMode({
+                         onPause={() => videoRef.current && mediaSink.release(videoRef.current)}
+                     />
+                 ) : (
+-                    <div style={{ textAlign: "center", color: "#94a3b8", padding: 32 }}>
++                    <div style={{ textAlign: "center", color: "var(--text-secondary)", padding: 32 }}>
+                         <Youtube size={56} style={{ marginBottom: 16, opacity: 0.3 }} />
+                         <div style={{ fontSize: 15, marginBottom: 20 }}>
+                             Paste a YouTube URL or local video to watch here
+@@ -113,8 +113,8 @@ export default function FocusMode({
+                                 onChange={e => setInputUrl(e.target.value)}
+                                 placeholder="https://youtube.com/watch?v=ΓÇª"
+                                 style={{
+-                                    flex: 1, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)",
+-                                    borderRadius: 8, padding: "8px 12px", color: "white", fontSize: 13, outline: "none"
++                                    flex: 1, background: "var(--bg-tertiary)", border: "1px solid var(--border-strong)",
++                                    borderRadius: 8, padding: "8px 12px", color: "var(--text-primary)", fontSize: 13, outline: "none"
+                                 }}
+                                 onKeyDown={e => e.key === "Enter" && handleInputSubmit()}
+                             />
