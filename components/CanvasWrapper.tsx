@@ -6,7 +6,6 @@ import {
     Editor,
     loadSnapshot,
     getSnapshot,
-    TLUiOverrides,
     TLComponents,
 } from "@tldraw/tldraw";
 import "@tldraw/tldraw/tldraw.css";
@@ -15,6 +14,7 @@ import Sidebar from "./Sidebar";
 import FocusMode from "./FocusMode";
 import PagesBar from "./PagesBar";
 import StatusBar from "./StatusBar";
+import PdfViewer from "./PdfViewer";
 import {
     deserializeVistaraFile,
     serializeVistaraFile,
@@ -40,15 +40,27 @@ async function getTauriModules() {
 // ── Helpers ────────────────────────────────────────────────────────────────
 function extractYoutubeId(url: string): string | null {
     const match = url.match(
-        /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([\w-]{11})/
+        /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/))([\\w-]{11})/
     );
     return match ? match[1] : null;
+}
+
+function isMobileDevice(): boolean {
+    if (typeof window === "undefined") return false;
+    return window.innerWidth <= 768;
+}
+
+// ── PDF state ──────────────────────────────────────────────────────────────
+interface PdfFile {
+    id: string;
+    name: string;
+    url: string;
 }
 
 // ── Component ──────────────────────────────────────────────────────────────
 export default function CanvasWrapper() {
     const editorRef = useRef<Editor | null>(null);
-    const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [sidebarOpen, setSidebarOpen] = useState(() => !isMobileDevice());
     const [activeTool, setActiveTool] = useState("select");
     const [focusMode, setFocusMode] = useState(false);
     const [focusVideoUrl, setFocusVideoUrl] = useState<string>("");
@@ -58,14 +70,40 @@ export default function CanvasWrapper() {
     const [isDirty, setIsDirty] = useState(false);
     const [statusMsg, setStatusMsg] = useState("Ready — draw something!");
     const [assetMap, setAssetMap] = useState<Record<string, string>>({});
+    const [theme, setTheme] = useState<"dark" | "light">("dark");
+    const [pdfFiles, setPdfFiles] = useState<PdfFile[]>([]);
+    const [dragOver, setDragOver] = useState(false);
     const autosaveTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+
+    // ── Theme management ──────────────────────────────────────────────────
+    useEffect(() => {
+        document.documentElement.setAttribute("data-theme", theme);
+        const editor = editorRef.current;
+        if (editor) {
+            editor.user.updateUserPreferences({ colorScheme: theme });
+        }
+    }, [theme]);
+
+    const toggleTheme = useCallback(() => {
+        setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+    }, []);
+
+    // ── Mobile sidebar behavior ───────────────────────────────────────────
+    useEffect(() => {
+        const handleResize = () => {
+            if (isMobileDevice() && sidebarOpen) {
+                setSidebarOpen(false);
+            }
+        };
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, [sidebarOpen]);
 
     // ── Save helpers ──────────────────────────────────────────────────────
     const buildVistaraFile = useCallback((): VistaraFile | null => {
         const editor = editorRef.current;
         if (!editor) return null;
-        // tldraw v4: getSnapshot returns TLEditorSnapshot
-        const snapshot = getSnapshot(editor.store) as unknown as import("@/lib/persistence").VistaraFile["snapshot"];
+        const snapshot = getSnapshot(editor.store) as unknown as VistaraFile["snapshot"];
         return createVistaraFile(snapshot, assetMap, todos, notes);
     }, [assetMap, todos, notes]);
 
@@ -107,6 +145,7 @@ export default function CanvasWrapper() {
         setTodos([]);
         setNotes("");
         setAssetMap({});
+        setPdfFiles([]);
         setCurrentFilePath(null);
         setIsDirty(false);
         setStatusMsg("New board created");
@@ -153,7 +192,7 @@ export default function CanvasWrapper() {
                             setAssetMap(vf.assets || {});
                             setIsDirty(false);
                             setStatusMsg("Board loaded ✓");
-                        } catch (err) {
+                        } catch {
                             setStatusMsg("Failed to parse .vistara file");
                         }
                     };
@@ -209,6 +248,7 @@ export default function CanvasWrapper() {
     const handleFileDrop = useCallback(
         async (e: React.DragEvent<HTMLDivElement>) => {
             e.preventDefault();
+            setDragOver(false);
             const editor = editorRef.current;
             if (!editor) return;
 
@@ -219,13 +259,8 @@ export default function CanvasWrapper() {
                 if (file.type.startsWith("image/")) {
                     const url = URL.createObjectURL(file);
                     try {
-                        await editor.putExternalContent({
-                            type: "url",
-                            url,
-                            point,
-                        });
+                        await editor.putExternalContent({ type: "url", url, point });
                     } catch {
-                        // Fallback: create image asset manually
                         editor.createShape({
                             type: "image",
                             x: point.x - 150,
@@ -234,7 +269,6 @@ export default function CanvasWrapper() {
                         } as any);
                     }
                 } else if (file.type.startsWith("video/") || file.type.startsWith("audio/")) {
-                    // For video/audio, create a note shape with media info
                     const url = URL.createObjectURL(file);
                     editor.createShape({
                         type: "text",
@@ -247,20 +281,16 @@ export default function CanvasWrapper() {
                             w: 200,
                         },
                     } as any);
-                    // Store the URL for playback
-                    setAssetMap(prev => ({ ...prev, [file.name]: url }));
+                    setAssetMap((prev) => ({ ...prev, [file.name]: url }));
                 } else if (file.type === "application/pdf") {
-                    editor.createShape({
-                        type: "text",
-                        x: point.x - 100,
-                        y: point.y - 20,
-                        props: {
-                            text: `📄 ${file.name}`,
-                            font: "mono",
-                            size: "s",
-                            w: 200,
-                        },
-                    } as any);
+                    // Spawn PDF viewer overlay
+                    const url = URL.createObjectURL(file);
+                    setPdfFiles((prev) => [
+                        ...prev,
+                        { id: `pdf-${Date.now()}`, name: file.name, url },
+                    ]);
+                    setStatusMsg(`Opened PDF: ${file.name}`);
+                    setTimeout(() => setStatusMsg("Ready"), 2500);
                 }
             }
 
@@ -350,7 +380,6 @@ export default function CanvasWrapper() {
                     setStatusMsg("Nothing to export!");
                     return;
                 }
-                // tldraw v4: toImageDataUrl returns { height, url, width }
                 const result = await editor.toImageDataUrl(shapeIds, {
                     format: format === "svg" ? "svg" : format === "jpg" ? "jpeg" : "png",
                     padding: 32,
@@ -379,14 +408,23 @@ export default function CanvasWrapper() {
         editor.setCurrentTool(tool);
     }, []);
 
-    // ── tldraw overrides ──────────────────────────────────────────────────
-    const uiOverrides: TLUiOverrides = {
-        tools: (_editor, tools) => tools,
-        actions: (_editor, actions) => actions,
-    };
+    // ── PDF viewer management ─────────────────────────────────────────────
+    const closePdf = useCallback((id: string) => {
+        setPdfFiles((prev) => {
+            const removed = prev.find((p) => p.id === id);
+            if (removed) URL.revokeObjectURL(removed.url);
+            return prev.filter((p) => p.id !== id);
+        });
+    }, []);
 
+    // ── tldraw component overrides ────────────────────────────────────────
+    // Re-enable native tldraw UI: style panel, context menu, keyboard shortcuts
+    // Only hide tldraw's built-in toolbar and main menu (we use our own)
     const components: TLComponents = {
-        Toolbar: null, // Use our custom top toolbar
+        Toolbar: null,
+        MainMenu: null,
+        PageMenu: null,
+        NavigationPanel: null,
     };
 
     return (
@@ -397,7 +435,7 @@ export default function CanvasWrapper() {
                 height: "100vh",
                 width: "100vw",
                 overflow: "hidden",
-                background: "#1a1a2e",
+                background: "var(--bg-primary)",
             }}
         >
             {/* ── Top Toolbar ── */}
@@ -414,31 +452,43 @@ export default function CanvasWrapper() {
                 isSidebarOpen={sidebarOpen}
                 isDirty={isDirty}
                 editor={editorRef.current}
+                theme={theme}
+                onToggleTheme={toggleTheme}
             />
 
             {/* ── Canvas + Sidebar ── */}
             <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
                 {/* Canvas drop zone */}
                 <div
-                    style={{ flex: 1, position: "relative", overflow: "hidden" }}
-                    onDragOver={(e) => e.preventDefault()}
+                    className={`canvas-drop-zone ${dragOver ? "drag-over" : ""}`}
+                    onDragOver={(e) => {
+                        e.preventDefault();
+                        setDragOver(true);
+                    }}
+                    onDragLeave={() => setDragOver(false)}
                     onDrop={handleFileDrop}
                 >
                     <Tldraw
                         onMount={(editor) => {
                             editorRef.current = editor;
-                            editor.user.updateUserPreferences({ colorScheme: "dark" });
-                            // mark dirty on any store change
+                            editor.user.updateUserPreferences({ colorScheme: theme });
                             editor.store.listen(
                                 () => setIsDirty(true),
                                 { source: "user", scope: "document" }
                             );
                         }}
                         autoFocus
-                        overrides={uiOverrides}
                         components={components}
                     />
                 </div>
+
+                {/* ── Mobile Sidebar Backdrop ── */}
+                {sidebarOpen && isMobileDevice() && (
+                    <div
+                        className="sidebar-backdrop"
+                        onClick={() => setSidebarOpen(false)}
+                    />
+                )}
 
                 {/* ── Sidebar ── */}
                 <div className={`sidebar ${sidebarOpen ? "" : "collapsed"}`}>
@@ -473,6 +523,18 @@ export default function CanvasWrapper() {
                     editor={editorRef.current}
                 />
             )}
+
+            {/* ── PDF Viewer Overlays ── */}
+            {pdfFiles.map((pdf, i) => (
+                <PdfViewer
+                    key={pdf.id}
+                    id={pdf.id}
+                    name={pdf.name}
+                    url={pdf.url}
+                    onClose={() => closePdf(pdf.id)}
+                    defaultPosition={{ x: 80 + i * 30, y: 80 + i * 30 }}
+                />
+            ))}
         </div>
     );
 }

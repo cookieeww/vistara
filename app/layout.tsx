@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 export const metadata: Metadata = {
   title: "Vistara — Infinite Study Canvas",
   description:
-    "An offline-first infinite canvas for studying, note-taking, and organising ideas.",
+    "A free, offline-first infinite canvas for studying, note-taking, drawing, and organizing ideas.",
 };
 
 export default function RootLayout({
@@ -17,7 +17,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} antialiased bg-[#1a1a2e] text-white`}>
+      <body className={`${inter.variable} antialiased`}>
         {children}
       </body>
     </html>
