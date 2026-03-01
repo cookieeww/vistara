@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useCallback, useEffect } from "react";
 import { Editor } from "@tldraw/tldraw";
 import { X, Youtube, ExternalLink } from "lucide-react";
 import { mediaSink } from "@/lib/mediaSink";
@@ -16,7 +16,7 @@ interface FocusModeProps {
 
 function extractYoutubeId(url: string): string | null {
     const match = url.match(
-        /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([\w-]{11})/
+        /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/))([\\w-]{11})/
     );
     return match ? match[1] : null;
 }
@@ -26,6 +26,11 @@ export default function FocusMode({
 }: FocusModeProps) {
     const [inputUrl, setInputUrl] = useState(videoUrl);
     const videoRef = useRef<HTMLVideoElement>(null);
+    const dividerRef = useRef<HTMLDivElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [videoPanelWidth, setVideoPanelWidth] = useState(55); // percentage
+    const [isDragging, setIsDragging] = useState(false);
+
     const ytId = extractYoutubeId(inputUrl || videoUrl);
     const isYt = !!ytId;
     const isLocalVideo = !isYt && (videoUrl.startsWith("blob:") || videoUrl.match(/\.(mp4|webm|ogg)$/i));
@@ -34,10 +39,39 @@ export default function FocusMode({
         onVideoUrlChange(inputUrl);
     };
 
+    // Resize divider logic
+    const handleDividerMouseDown = useCallback((e: React.MouseEvent) => {
+        e.preventDefault();
+        setIsDragging(true);
+    }, []);
+
+    useEffect(() => {
+        if (!isDragging) return;
+
+        const handleMouseMove = (e: MouseEvent) => {
+            const container = containerRef.current;
+            if (!container) return;
+            const rect = container.getBoundingClientRect();
+            const newWidth = ((e.clientX - rect.left) / rect.width) * 100;
+            setVideoPanelWidth(Math.min(80, Math.max(20, newWidth)));
+        };
+
+        const handleMouseUp = () => {
+            setIsDragging(false);
+        };
+
+        window.addEventListener("mousemove", handleMouseMove);
+        window.addEventListener("mouseup", handleMouseUp);
+        return () => {
+            window.removeEventListener("mousemove", handleMouseMove);
+            window.removeEventListener("mouseup", handleMouseUp);
+        };
+    }, [isDragging]);
+
     return (
-        <div className="focus-overlay">
+        <div className="focus-overlay" ref={containerRef}>
             {/* Left: Video pane */}
-            <div className="focus-video-pane">
+            <div className="focus-video-pane" style={{ width: `${videoPanelWidth}%` }}>
                 {/* Close button */}
                 <button
                     onClick={onClose}
@@ -87,7 +121,7 @@ export default function FocusMode({
                             <button
                                 onClick={handleInputSubmit}
                                 style={{
-                                    background: "#e94560", border: "none", borderRadius: 8,
+                                    background: "var(--accent)", border: "none", borderRadius: 8,
                                     padding: "8px 16px", color: "white", cursor: "pointer", fontSize: 13
                                 }}
                             >
@@ -98,8 +132,15 @@ export default function FocusMode({
                 )}
             </div>
 
+            {/* Resizable divider */}
+            <div
+                ref={dividerRef}
+                className={`focus-divider ${isDragging ? "active" : ""}`}
+                onMouseDown={handleDividerMouseDown}
+            />
+
             {/* Right: Notes pane */}
-            <div className="focus-notes-pane">
+            <div className="focus-notes-pane" style={{ flex: 1 }}>
                 <div className="focus-notes-header">
                     <div>
                         <div style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)" }}>Study Notes</div>
@@ -110,7 +151,7 @@ export default function FocusMode({
                             <button
                                 onClick={() => window.open(`https://youtube.com/watch?v=${ytId}`, "_blank")}
                                 style={{
-                                    background: "rgba(255,255,255,0.06)", border: "1px solid var(--border)",
+                                    background: "var(--accent-muted)", border: "1px solid var(--border)",
                                     borderRadius: 8, padding: "6px 12px", color: "var(--text-secondary)",
                                     cursor: "pointer", fontSize: 12, display: "flex", alignItems: "center", gap: 6
                                 }}

@@ -461,6 +461,7 @@ export default function CanvasWrapper() {
                 {/* Canvas drop zone */}
                 <div
                     className={`canvas-drop-zone ${dragOver ? "drag-over" : ""}`}
+                    style={{ flex: 1, position: "relative", overflow: "hidden" }}
                     onDragOver={(e) => {
                         e.preventDefault();
                         setDragOver(true);
